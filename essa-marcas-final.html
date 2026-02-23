@@ -481,6 +481,8 @@ async function deleteBrandFromSheets(id){
   await apiPost({action:'deleteMarca', id});
 }
 async function loadAll(){
+  // Clear any old localStorage data to avoid conflicts with Sheets
+  try { localStorage.removeItem('essa-marcas-v1'); localStorage.removeItem('essa-hub-v4'); } catch(e) {}
   // Load agencies
   const agData = await apiGet('getAgencias');
   if (agData && agData.length) agencies = agData;
@@ -494,14 +496,18 @@ async function loadAll(){
 
   // Load brands
   const mrcData = await apiGet('getMarcas');
-  if (mrcData && mrcData.length) { brands=mrcData; nextId=Math.max(...mrcData.map(b=>b.id))+1; return; }
+  if (mrcData && Array.isArray(mrcData)) { 
+    brands = mrcData; 
+    nextId = mrcData.length ? Math.max(...mrcData.map(b=>b.id))+1 : 1; 
+    return; 
+  }
   try{
     const raw=localStorage.getItem(MRC_KEY);
     if(raw){ const d=JSON.parse(raw); brands=d.brands||[]; nextId=d.nextId||1; return; }
   }catch(e){}
   brands=[];
 }
-function defaultAgencies(){ return [{id:1,name:'GISELE GOMES COMUNICA',type:'fee',especialidades:['Assessoria de Imprensa']},{id:2,name:'DRIVEN',type:'fee',especialidades:['Full Service']},{id:3,name:'ENERGIA',type:'fee',especialidades:['Full Service']},{id:4,name:'ADAM',type:'fee',especialidades:[]},{id:5,name:'UNOBVIOUS',type:'fee',especialidades:[]},{id:6,name:'ÁLAMO',type:'fee',especialidades:[]},{id:7,name:'HOW HUB',type:'fee',especialidades:[]},{id:8,name:'YALL',type:'fee',especialidades:[]},{id:9,name:'MANTRA',type:'variavel',especialidades:['Branding & Design']},{id:10,name:'AERIAL',type:'variavel',especialidades:['Eventos']}]; }
+function defaultAgencies(){ return []; }
 
 // ── FILTERING ────────────────────────────────────────────────────────────────
 function filtered(){
