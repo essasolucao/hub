@@ -344,30 +344,7 @@ const ESP_STYLE = {
 };
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
-const DEFAULT = [
-  { id:1,  name:'GISELE GOMES COMUNICA', type:'fee', especialidades:['Assessoria de Imprensa'], briefings:[
-      {brand:'CINÉPOLIS',desc:'',status:'conquistado'},{brand:'FLEX BRASIL',desc:'',status:'conquistado'},
-      ...Array(16).fill(0).map((_,i)=>({brand:`Briefing ${i+3}`,desc:'',status:'declinado'}))
-  ]},
-  { id:2,  name:'DRIVEN',    type:'fee', especialidades:['Full Service'], briefings:[
-      {brand:'CASIO',desc:'',status:'conquistado'},
-      ...Array(10).fill(0).map((_,i)=>({brand:`Briefing ${i+2}`,desc:'',status:'declinado'}))
-  ]},
-  { id:3,  name:'ENERGIA',   type:'fee', especialidades:['Full Service'], briefings:[
-      {brand:'Conquista 1',desc:'',status:'conquistado'},
-      ...Array(25).fill(0).map((_,i)=>({brand:`Briefing ${i+2}`,desc:'',status:'andamento'}))
-  ]},
-  { id:4,  name:'ADAM',      type:'fee', especialidades:[], briefings: Array(9).fill(0).map((_,i)=>({brand:`Briefing ${i+1}`,desc:'',status:'avaliacao'})) },
-  { id:5,  name:'UNOBVIOUS', type:'fee', especialidades:[], briefings: Array(4).fill(0).map((_,i)=>({brand:`Briefing ${i+1}`,desc:'',status:'andamento'})) },
-  { id:6,  name:'ÁLAMO',     type:'fee', especialidades:[], briefings: Array(2).fill(0).map((_,i)=>({brand:`Briefing ${i+1}`,desc:'',status:'standby'})) },
-  { id:7,  name:'HOW HUB',   type:'fee', especialidades:[], briefings: Array(8).fill(0).map((_,i)=>({brand:`Briefing ${i+1}`,desc:'',status:'avaliacao'})) },
-  { id:8,  name:'YALL',      type:'fee', especialidades:[], briefings:[] },
-  { id:9,  name:'MANTRA',    type:'variavel', especialidades:['Branding & Design'], briefings:[
-      {brand:'Conquista 1',desc:'',status:'conquistado'},{brand:'Conquista 2',desc:'',status:'conquistado'},
-      {brand:'Briefing 3',desc:'',status:'andamento'},{brand:'Briefing 4',desc:'',status:'avaliacao'},
-  ]},
-  { id:10, name:'AERIAL',    type:'variavel', especialidades:['Eventos'], briefings:[] },
-];
+const DEFAULT = [];
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 let agencies=[], nextId=11, currentView='cards', currentSort='briefings';
@@ -400,6 +377,8 @@ function updateApiStatus(connected) {
 
 async function save(){ const p=JSON.stringify({agencies,nextId}); try{ if(window.storage) await window.storage.set(KEY,p); else localStorage.setItem(KEY,p); }catch(e){} }
 async function load(){
+  // Clear old localStorage to avoid conflicts
+  try { localStorage.removeItem('essa-hub-v4'); } catch(e) {}
   const data = await apiGet('getAgencias');
   if (data && Array.isArray(data) && data.length) {
     agencies = data;
