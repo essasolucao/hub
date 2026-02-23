@@ -368,8 +368,47 @@ let agencies=[], nextId=11, currentView='cards', currentSort='briefings';
 let typeFilter='all', espFilter=null, currentAgId=null;
 const KEY='essa-hub-v4';
 
+const API_URL = 'https://script.google.com/macros/s/AKfycbzX91DLOrEGp-i4dibpKxzFgQ0tfiYf-9NyMzix8fIEJygR1wru9v5jVdwzWfAnUuq3Wg/exec';
+
+async function apiGet(action) {
+  try {
+    const r = await fetch(API_URL + '?action=' + action);
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+async function apiPost(body) {
+  try {
+    const r = await fetch(API_URL, {method:'POST', body:JSON.stringify(body)});
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+function updateApiStatus(connected) {
+  const el = document.getElementById('api-status-bar');
+  if (el) el.innerHTML = connected
+    ? '<span style="color:#5DBD8A;font-size:.65rem">● Conectado ao Google Sheets</span>'
+    : '<span style="color:#D46060;font-size:.65rem">● Offline</span>';
+}
+
+
 async function save(){ const p=JSON.stringify({agencies,nextId}); try{ if(window.storage) await window.storage.set(KEY,p); else localStorage.setItem(KEY,p); }catch(e){} }
-async function load(){ try{ let raw=null; if(window.storage){ const r=await window.storage.get(KEY); if(r) raw=r.value; } else raw=localStorage.getItem(KEY); if(raw){ const d=JSON.parse(raw); agencies=d.agencies; nextId=d.nextId||11; return; } }catch(e){} agencies=JSON.parse(JSON.stringify(DEFAULT)); }
+async function load(){
+  const data = await apiGet('getAgencias');
+  if (data && Array.isArray(data) && data.length) {
+    agencies = data;
+    nextId = Math.max(...data.map(a=>a.id)) + 1;
+    updateApiStatus(true);
+    return;
+  }
+  updateApiStatus(false);
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw){ const d=JSON.parse(raw); agencies=d.agencies; nextId=d.nextId||23; return; }
+  }catch(e){}
+  agencies = JSON.parse(JSON.stringify(DEFAULT));
+  nextId = 23;
+}
 
 const STS=['andamento','avaliacao','standby','declinado','conquistado'];
 const STS_LBL={andamento:'Em Andamento',avaliacao:'Em Avaliação',standby:'Standby',declinado:'Declinado',conquistado:'Conquistado'};
