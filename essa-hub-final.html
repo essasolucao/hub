@@ -375,24 +375,21 @@ function updateApiStatus(connected) {
 }
 
 
-async function save(){ const p=JSON.stringify({agencies,nextId}); try{ if(window.storage) await window.storage.set(KEY,p); else localStorage.setItem(KEY,p); }catch(e){} }
+async function save(){ /* localStorage disabled - Sheets only */ }
+
 async function load(){
-  // Clear old localStorage to avoid conflicts
+  // Always clear old cached data
   try { localStorage.removeItem('essa-hub-v4'); } catch(e) {}
+  // Load exclusively from Google Sheets
   const data = await apiGet('getAgencias');
-  if (data && Array.isArray(data) && data.length) {
+  if (data && Array.isArray(data)) {
     agencies = data;
-    nextId = Math.max(...data.map(a=>a.id)) + 1;
+    nextId = data.length ? Math.max(...data.map(a=>a.id)) + 1 : 1;
     updateApiStatus(true);
-    return;
+  } else {
+    updateApiStatus(false);
+    agencies = [];
   }
-  updateApiStatus(false);
-  try{
-    const raw = localStorage.getItem(KEY);
-    if(raw){ const d=JSON.parse(raw); agencies=d.agencies; nextId=d.nextId||23; return; }
-  }catch(e){}
-  agencies = JSON.parse(JSON.stringify(DEFAULT));
-  nextId = 23;
 }
 
 const STS=['andamento','avaliacao','standby','declinado','conquistado'];
