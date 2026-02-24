@@ -475,9 +475,14 @@ async function saveBrands(){
 }
 
 async function saveBrandToSheets(data){
-  const r = await apiPost({action:'saveMarca', data});
-  if(r && r.ok) showToast('Salvo no Google Sheets ✓');
-  else if(API_URL) showToast('Salvo localmente (Sheets indisponível)');
+  try {
+    const r = await apiPost({action:'saveMarca', data});
+    if(r && r.ok){
+      showToast('Salvo no Google Sheets ✓');
+      // Reload brands from Sheets
+      setTimeout(async()=>{ await loadAll(); render(); }, 1000);
+    } else showToast('Erro ao salvar. Tente novamente.');
+  } catch(e){ showToast('Erro ao salvar.'); }
 }
 
 async function deleteBrandFromSheets(id){

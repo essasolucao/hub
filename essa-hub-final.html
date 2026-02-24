@@ -569,7 +569,18 @@ function renderListModal(){
     </div>`;
 }
 
-function addAgency(){ const name=(document.getElementById('new-ag-name').value.trim()).toUpperCase(), type=document.getElementById('new-ag-type').value; if(!name) return; agencies.push({id:nextId++,name,type,especialidades:[],briefings:[]}); save(); renderListModal(); showToast(`${name} adicionada!`); }
+async function addAgency(){
+  const name=(document.getElementById('new-ag-name').value.trim()).toUpperCase();
+  const type=document.getElementById('new-ag-type').value;
+  if(!name) return;
+  const newAg = {id:nextId++, name, type, especialidades:[], briefings:[], feeValor:0, feeVencimento:0, dataIngresso:''};
+  agencies.push(newAg);
+  renderListModal();
+  showToast('Salvando...');
+  const r = await apiPost({action:'saveAgencia', data:newAg});
+  if(r && r.ok) showToast(name + ' adicionada e salva ✓');
+  else showToast('Erro ao salvar. Tente novamente.');
+}
 
 // ── DETAIL MODAL ─────────────────────────────────────────────────────────────
 function openDet(id){ currentAgId=id; renderDet(); document.getElementById('det-overlay').classList.add('open'); }
@@ -668,12 +679,20 @@ function saveDet(){
   ag.briefings.forEach((_,i)=>saveBriefingFeedbackObs(i));
   // Clear feedback for non-declined/standby briefings
   ag.briefings.forEach(b=>{ if(!['declinado','standby'].includes(b.status)) b.feedback=null; });
-  save();
   const savedAg = agencies.find(a=>a.id===currentAgId);
   if(savedAg) saveAgenciaToSheets(savedAg);
   renderListModal();
 }
-function delAgency(id){ if(!confirm('Remover esta agência?')) return; agencies=agencies.filter(a=>a.id!==id); save(); closeDet(); renderListModal(); render(); showToast('Agência removida.'); }
+async function delAgency(id){
+  if(!confirm('Remover esta agência?')) return;
+  agencies = agencies.filter(a=>a.id!==id);
+  closeDet(); renderListModal(); render();
+  try {
+    const r = await apiPost({action:'deleteAgencia', id});
+    if(r && r.ok) showToast('Agência removida ✓');
+    else showToast('Removida localmente — erro no Sheets.');
+  } catch(e){ showToast('Removida localmente.'); }
+}
 
 
 // ── DYNAMIC SPECIALTY ADD ─────────────────────────────────────────────────────
