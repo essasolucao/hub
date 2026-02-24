@@ -263,6 +263,9 @@ textarea.inp{resize:vertical;min-height:65px;line-height:1.5;}
 .aceite-chip.pendente{background:var(--surface2);border:1px solid var(--border);color:var(--muted);}
 .bcard-winner{padding:0 1.2rem .85rem;}
 .winner-pill{display:inline-flex;align-items:center;gap:.35rem;background:#D4AF6A15;border:1px solid #D4AF6A50;color:var(--gold);font-size:.68rem;font-weight:700;padding:.28rem .75rem;border-radius:20px;}
+
+.ins-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.85rem 1rem;min-width:0;}
+.ins-label{font-size:.65rem;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.4rem;}
 </style>
 </head>
 <body>
@@ -331,7 +334,7 @@ textarea.inp{resize:vertical;min-height:65px;line-height:1.5;}
 <!-- INSIGHTS -->
 <div class="insights" style="margin-left:1.5rem;margin-right:1.5rem;">
   <h3>📊 Visão Geral</h3>
-  <div class="insights-grid" id="insights-content"><div class="ins"><strong>Carregando...</strong></div></div>
+  <div class="insights-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.75rem;" id="insights-content"><div class="ins"><strong>Carregando...</strong></div></div>
 </div>
 
 <!-- ACTION BAR -->
@@ -481,8 +484,6 @@ async function deleteBrandFromSheets(id){
   await apiPost({action:'deleteMarca', id});
 }
 async function loadAll(){
-  // Clear any old localStorage data to avoid conflicts with Sheets
-  try { localStorage.removeItem('essa-marcas-v1'); localStorage.removeItem('essa-hub-v4'); } catch(e) {}
   // Load agencies
   const agData = await apiGet('getAgencias');
   if (agData && agData.length) agencies = agData;
@@ -496,18 +497,14 @@ async function loadAll(){
 
   // Load brands
   const mrcData = await apiGet('getMarcas');
-  if (mrcData && Array.isArray(mrcData)) { 
-    brands = mrcData; 
-    nextId = mrcData.length ? Math.max(...mrcData.map(b=>b.id))+1 : 1; 
-    return; 
-  }
+  if (mrcData && mrcData.length) { brands=mrcData; nextId=Math.max(...mrcData.map(b=>b.id))+1; return; }
   try{
     const raw=localStorage.getItem(MRC_KEY);
     if(raw){ const d=JSON.parse(raw); brands=d.brands||[]; nextId=d.nextId||1; return; }
   }catch(e){}
   brands=[];
 }
-function defaultAgencies(){ return []; }
+function defaultAgencies(){ return [{id:1,name:'GISELE GOMES COMUNICA',type:'fee',especialidades:['Assessoria de Imprensa']},{id:2,name:'DRIVEN',type:'fee',especialidades:['Full Service']},{id:3,name:'ENERGIA',type:'fee',especialidades:['Full Service']},{id:4,name:'ADAM',type:'fee',especialidades:[]},{id:5,name:'UNOBVIOUS',type:'fee',especialidades:[]},{id:6,name:'ÁLAMO',type:'fee',especialidades:[]},{id:7,name:'HOW HUB',type:'fee',especialidades:[]},{id:8,name:'YALL',type:'fee',especialidades:[]},{id:9,name:'MANTRA',type:'variavel',especialidades:['Branding & Design']},{id:10,name:'AERIAL',type:'variavel',especialidades:['Eventos']}]; }
 
 // ── FILTERING ────────────────────────────────────────────────────────────────
 function filtered(){
@@ -614,29 +611,83 @@ function renderYearBtns(){
 
 // ── INSIGHTS ─────────────────────────────────────────────────────────────────
 function renderInsights(){
-  const data=filtered();
-  const total=data.length;
-  const ativos=data.filter(b=>['andamento','avaliacao','brifar'].includes(b.status)).length;
-  const conquistas=data.filter(b=>b.status==='conquista').length;
-  const totalBudget=data.filter(b=>b.budget>0).reduce((s,b)=>s+b.budget,0);
-  const anoAtual=new Date().getFullYear();
-  const esteAno=brands.filter(b=>b.dataRecebimento&&b.dataRecebimento.startsWith(anoAtual)).length;
+  const data = filtered();
+  const total = data.length;
+  const allBrands = brands; // Use all brands for yearly stats
+  const anoAtual = new Date().getFullYear();
 
-  document.getElementById('tp-total').textContent=total;
-  document.getElementById('tp-ativos').textContent=ativos;
-  document.getElementById('tp-conquistas').textContent=conquistas;
-  document.getElementById('tp-budget').textContent=totalBudget>0?fmtBudget(totalBudget):'R$ 0';
+  // ── Status counts (filtered) ─────────────────────────────
+  const ativos      = data.filter(b=>['andamento','avaliacao','brifar'].includes(b.status)).length;
+  const conquistas  = data.filter(b=>b.status==='conquista').length;
+  const declinio    = data.filter(b=>b.status==='declinio').length;
+  const standby     = data.filter(b=>b.status==='standby').length;
+  const andamento   = data.filter(b=>b.status==='andamento').length;
+  const totalBudget = data.filter(b=>b.budget>0).reduce((s,b)=>s+b.budget,0);
 
-  const conv=total>0?(conquistas/total*100).toFixed(0):0;
-  document.getElementById('insights-content').innerHTML=`
-    <div class="ins"><strong>📅 Oportunidades em ${anoAtual}</strong>${esteAno} briefing(s) recebido(s) este ano${yearFilter?` · filtrado: ${total}`:''}.</div>
-    <div class="ins"><strong>💰 Budget total em aberto</strong>${totalBudget>0?fmtBudget(totalBudget)+' em '+data.filter(b=>b.budget>0).length+' briefing(s)':'Nenhum budget cadastrado.'}</div>
-    <div class="ins"><strong>📋 Pipeline: ${ativos} ativo(s)</strong>${data.filter(b=>b.status==='brifar').length} para brifar · ${data.filter(b=>b.status==='andamento').length} em andamento · ${data.filter(b=>b.status==='avaliacao').length} em avaliação</div>
-    <div class="ins"><strong>✅ Taxa de conversão: ${conv}%</strong>${conquistas} conquista(s) de ${total} briefing(s) ${yearFilter?'no período':'no total'}.</div>
+  // ── Rates ────────────────────────────────────────────────
+  const taxaConquista = total>0 ? (conquistas/total*100).toFixed(0) : 0;
+  const taxaDeclinio  = total>0 ? (declinio/total*100).toFixed(0) : 0;
+  const taxaStandby   = total>0 ? (standby/total*100).toFixed(0) : 0;
+  const taxaAndamento = total>0 ? (andamento/total*100).toFixed(0) : 0;
+
+  // ── Monthly opportunities (current year, all brands) ─────
+  const byMonth = {};
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  allBrands.filter(b=>b.dataRecebimento&&b.dataRecebimento.startsWith(anoAtual)).forEach(b=>{
+    const m = parseInt(b.dataRecebimento.split('-')[1])-1;
+    byMonth[m] = (byMonth[m]||0)+1;
+  });
+  const totalAno = Object.values(byMonth).reduce((s,v)=>s+v,0);
+
+  // ── Update top pills ─────────────────────────────────────
+  document.getElementById('tp-total').textContent = total;
+  document.getElementById('tp-ativos').textContent = ativos;
+  document.getElementById('tp-conquistas').textContent = conquistas;
+  document.getElementById('tp-budget').textContent = totalBudget>0 ? fmtBudget(totalBudget) : 'R$ 0';
+
+  // ── Build insights grid ──────────────────────────────────
+  const monthBars = meses.map((m,i)=>{
+    const n = byMonth[i]||0;
+    const maxV = Math.max(...Object.values(byMonth),1);
+    const h = n ? Math.max(4, Math.round(n/maxV*48)) : 2;
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:.2rem;flex:1">
+      <span style="font-size:.55rem;color:var(--muted)">${n||''}</span>
+      <div style="width:100%;height:${h}px;background:${n?'var(--gold)':'var(--border)'};border-radius:2px;min-height:2px;transition:height .3s"></div>
+      <span style="font-size:.55rem;color:var(--muted)">${m}</span>
+    </div>`;
+  }).join('');
+
+  const insightsHTML = `
+    <div class="ins-card">
+      <div class="ins-label">📅 Oportunidades por mês — ${anoAtual}</div>
+      <div style="display:flex;align-items:flex-end;gap:.2rem;height:70px;margin-top:.5rem">${monthBars}</div>
+      <div style="font-size:.68rem;color:var(--muted);margin-top:.5rem">${totalAno} oportunidade${totalAno!==1?'s':''} geradas em ${anoAtual}</div>
+    </div>
+    <div class="ins-card">
+      <div class="ins-label">📊 Taxas de conversão</div>
+      ${rateBar('Conquistas', taxaConquista, '#5DBD8A')}
+      ${rateBar('Em Andamento', taxaAndamento, '#5A9FD4')}
+      ${rateBar('Declínio', taxaDeclinio, '#D46060')}
+      ${rateBar('Standby', taxaStandby, '#888FA0')}
+    </div>
   `;
+
+  const el = document.getElementById('insights-content');
+  if(el) el.innerHTML = insightsHTML;
 }
 
-// ── ESP FILTER BTNs ───────────────────────────────────────────────────────────
+function rateBar(label, pct, color){
+  return `<div style="margin:.35rem 0">
+    <div style="display:flex;justify-content:space-between;font-size:.68rem;margin-bottom:.25rem">
+      <span style="color:var(--muted)">${label}</span>
+      <span style="color:${color};font-weight:700">${pct}%</span>
+    </div>
+    <div style="background:var(--surface2);border-radius:20px;height:5px;overflow:hidden">
+      <div style="width:${pct}%;background:${color};height:100%;border-radius:20px;transition:width .5s"></div>
+    </div>
+  </div>`;
+}
+
 function renderEspFilterBtns(){
   document.getElementById('esp-filter-btns').innerHTML=ESPECIALIDADES.map(e=>{
     const s=ESP_STYLE[e],active=espFilter===e;
