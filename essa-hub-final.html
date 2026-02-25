@@ -351,7 +351,7 @@ let agencies=[], nextId=11, currentView='cards', currentSort='briefings';
 let typeFilter='all', espFilter=null, currentAgId=null;
 const KEY='essa-hub-v4';
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbx8b4IHf-mHTY71V5KPqi3qK2BtSm4GU5xtfKhxCllExsLMDaesokl5ZhlwhIikbdUUYg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwelf8bOwvm1p6ADMQNPKGVCzBBShM-RNf1aa0Idd75JgUXRwh2Ho_5-IlU3ljjaMmYkQ/exec';
 
 async function apiGet(action) {
   try {
@@ -682,6 +682,16 @@ function saveDet(){
   const savedAg = agencies.find(a=>a.id===currentAgId);
   if(savedAg) saveAgenciaToSheets(savedAg);
   renderListModal();
+}
+async function saveAgenciaToSheets(ag){
+  showToast('Salvando...');
+  try {
+    const r = await apiPost({action:'saveAgencia', data:ag});
+    if(r && r.ok){
+      showToast('Salvo no Google Sheets ✓');
+      setTimeout(async()=>{ await load(); render(); }, 800);
+    } else showToast('Erro ao salvar. Tente novamente.');
+  } catch(e){ showToast('Erro ao salvar.'); }
 }
 async function delAgency(id){
   if(!confirm('Remover esta agência?')) return;
