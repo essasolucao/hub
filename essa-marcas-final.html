@@ -385,7 +385,7 @@ const STATUS_ICON = {brifar:'📋',andamento:'🔵',avaliacao:'🟡',conquista:'
 //  CONEXÃO COM GOOGLE SHEETS
 //  Substitua o URL abaixo após publicar o Apps Script
 // ═══════════════════════════════════════════════════════════
-let API_URL = 'https://script.google.com/macros/s/AKfycbx8b4IHf-mHTY71V5KPqi3qK2BtSm4GU5xtfKhxCllExsLMDaesokl5ZhlwhIikbdUUYg/exec';
+let API_URL = 'https://script.google.com/macros/s/AKfycbwelf8bOwvm1p6ADMQNPKGVCzBBShM-RNf1aa0Idd75JgUXRwh2Ho_5-IlU3ljjaMmYkQ/exec';
 
 async function apiGet(action) {
   if (!API_URL) return null;
@@ -503,7 +503,7 @@ async function loadAll(){
   }catch(e){}
   brands=[];
 }
-function defaultAgencies(){ return []; },{id:2,name:'DRIVEN',type:'fee',especialidades:['Full Service']},{id:3,name:'ENERGIA',type:'fee',especialidades:['Full Service']},{id:4,name:'ADAM',type:'fee',especialidades:[]},{id:5,name:'UNOBVIOUS',type:'fee',especialidades:[]},{id:6,name:'ÁLAMO',type:'fee',especialidades:[]},{id:7,name:'HOW HUB',type:'fee',especialidades:[]},{id:8,name:'YALL',type:'fee',especialidades:[]},{id:9,name:'MANTRA',type:'variavel',especialidades:['Branding & Design']},{id:10,name:'AERIAL',type:'variavel',especialidades:['Eventos']}]; }
+function defaultAgencies(){ return []; }
 
 // ── FILTERING ────────────────────────────────────────────────────────────────
 function filtered(){
