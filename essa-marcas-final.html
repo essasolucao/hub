@@ -1047,7 +1047,16 @@ async function saveBrand(){
   await saveBrands();
   // Save to Google Sheets (async, non-blocking)
   const savedBrand = editingId ? brands.find(b=>b.id===editingId) : brands[brands.length-1];
-  if(savedBrand) saveBrandToSheets(savedBrand);
+  if(savedBrand){
+    // Include agency names and types so Apps Script can create them if needed
+    const agenciasNomes = {};
+    const agenciasTipos = {};
+    (savedBrand.agencias||[]).forEach(id => {
+      const ag = agencies.find(a=>a.id===id);
+      if(ag){ agenciasNomes[id]=ag.name; agenciasTipos[id]=ag.type; }
+    });
+    saveBrandToSheets({...savedBrand, agenciasNomes, agenciasTipos});
+  }
   closeModal(); render();
 }
 async function deleteBrand(id){
