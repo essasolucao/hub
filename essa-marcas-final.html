@@ -489,19 +489,29 @@ async function deleteBrandFromSheets(id){
   await apiPost({action:'deleteMarca', id});
 }
 async function loadAll(){
-  // Load agencies
-  const agData = await apiGet('getAgencias');
-  if (agData && agData.length) agencies = agData;
-  // agencies stay empty if Sheets returns nothing
+  const statusEl = document.getElementById('api-status-bar');
+  if(statusEl) statusEl.innerHTML = '<span style="color:#D4AF6A;font-size:.65rem">● Carregando...</span>';
+  
+  try {
+    // Load agencies
+    const agData = await apiGet('getAgencias');
+    if (agData && Array.isArray(agData)) agencies = agData;
 
-  // Load brands
-  const mrcData = await apiGet('getMarcas');
-  if (mrcData && mrcData.length) { brands=mrcData; nextId=Math.max(...mrcData.map(b=>b.id))+1; return; }
-  try{
-    const raw=localStorage.getItem(MRC_KEY);
-    if(raw){ const d=JSON.parse(raw); brands=d.brands||[]; nextId=d.nextId||1; return; }
-  }catch(e){}
-  brands=[];
+    // Load brands  
+    const mrcData = await apiGet('getMarcas');
+    if (mrcData && Array.isArray(mrcData)) {
+      brands = mrcData;
+      nextId = mrcData.length ? Math.max(...mrcData.map(b=>b.id))+1 : 1;
+    } else {
+      brands = [];
+    }
+
+    if(statusEl) statusEl.innerHTML = '<span style="color:#5DBD8A;font-size:.65rem">● Conectado ao Google Sheets</span>';
+  } catch(e) {
+    brands = [];
+    agencies = [];
+    if(statusEl) statusEl.innerHTML = '<span style="color:#D46060;font-size:.65rem">● Offline</span>';
+  }
 }
 function defaultAgencies(){ return []; }
 
