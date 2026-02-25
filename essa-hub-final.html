@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESSA Solução — Hub de Agências</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0B0C0E; --surface: #13151A; --surface2: #1C1F27; --border: #252830;
+  --gold: #D4AF6A; --gold2: #F0CC8A; --gold-dim: #7a6035;
+  --text: #EAE6DE; --muted: #666B78; --faint: #2a2d36;
+  --fee-color: #5A9FD4; --fee-bg: #5A9FD412;
+  --var-color: #A67DC8; --var-bg: #A67DC812;
+  --s-andamento:#5A9FD4; --s-avaliacao:#A67DC8; --s-standby:#D4A84B; --s-declinado:#D46060; --s-conquistado:#5DBD8A;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Instrument Sans',sans-serif;min-height:100vh;}
+
+header{padding:2.5rem 1.5rem 1rem;max-width:1100px;margin:0 auto;}
+.header-top{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+.header-sub{font-size:.68rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:.3rem;}
+h1{font-family:'Fraunces',serif;font-size:clamp(1.8rem,5vw,3rem);font-weight:900;line-height:1;letter-spacing:-2px;}
+h1 em{font-style:italic;color:var(--gold);}
+.pills{display:flex;gap:.4rem;flex-wrap:wrap;}
+.pill{background:var(--surface2);border:1px solid var(--border);border-radius:30px;padding:.28rem .8rem;font-size:.7rem;font-weight:600;color:var(--muted);}
+.pill b{color:var(--gold);font-family:'Fraunces',serif;font-size:.9rem;margin-right:.2rem;}
+.pill.fee-pill{border-color:#5A9FD430;} .pill.fee-pill b{color:var(--fee-color);}
+.pill.var-pill{border-color:#A67DC830;} .pill.var-pill b{color:var(--var-color);}
+.divider{height:1px;background:linear-gradient(to right,var(--gold-dim),transparent);margin:1.2rem 0;opacity:.5;}
+
+.type-tabs{max-width:1100px;margin:0 auto .5rem;padding:0 1.5rem;display:flex;gap:.5rem;flex-wrap:wrap;}
+.type-tab{padding:.5rem 1.2rem;border-radius:6px;font-size:.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:2px solid transparent;transition:all .2s;display:flex;align-items:center;gap:.5rem;}
+.type-tab.all{background:var(--surface2);border-color:var(--border);color:var(--muted);}
+.type-tab.fee{background:var(--fee-bg);border-color:#5A9FD430;color:var(--fee-color);}
+.type-tab.var{background:var(--var-bg);border-color:#A67DC830;color:var(--var-color);}
+.type-tab.active{box-shadow:0 0 0 2px currentColor;opacity:1;} .type-tab:not(.active){opacity:.55;}
+.type-count{background:currentColor;color:var(--bg);border-radius:20px;padding:.05rem .45rem;font-size:.65rem;font-weight:700;}
+
+/* ESP FILTER */
+.esp-filter{max-width:1100px;margin:0 auto .8rem;padding:0 1.5rem;display:flex;gap:.35rem;flex-wrap:wrap;align-items:center;}
+.esp-filter-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-right:.2rem;}
+.esp-btn{font-size:.65rem;font-weight:700;padding:.22rem .65rem;border-radius:20px;cursor:pointer;border:1px solid;transition:all .15s;background:transparent;font-family:'Instrument Sans',sans-serif;opacity:.5;}
+.esp-btn.active{opacity:1;} .esp-btn:hover{opacity:.9;}
+
+.legend-bar{max-width:1100px;margin:0 auto .8rem;padding:0 1.5rem;display:flex;flex-wrap:wrap;gap:.5rem;}
+.leg{display:flex;align-items:center;gap:.35rem;font-size:.68rem;color:var(--muted);font-weight:600;}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+.action-bar{max-width:1100px;margin:0 auto 1.2rem;padding:0 1.5rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;}
+.btn-tab{background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:'Instrument Sans',sans-serif;font-size:.68rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:.38rem .8rem;border-radius:4px;cursor:pointer;transition:all .15s;}
+.btn-tab:hover{border-color:var(--gold-dim);color:var(--text);} .btn-tab.active{background:var(--gold);border-color:var(--gold);color:#000;}
+.btn-edit{background:var(--gold);border:none;color:#000;font-family:'Instrument Sans',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:.42rem 1rem;border-radius:4px;cursor:pointer;margin-left:auto;transition:background .15s;display:flex;align-items:center;gap:.35rem;}
+.btn-edit:hover{background:var(--gold2);}
+
+.insights{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:8px;padding:1.1rem 1.4rem;max-width:1100px;margin:0 1.5rem 1.2rem;}
+.insights h3{font-family:'Fraunces',serif;font-size:.9rem;color:var(--gold);margin-bottom:.6rem;}
+.insights-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.7rem;}
+.ins{font-size:.76rem;line-height:1.55;color:#999;} .ins strong{color:var(--text);display:block;}
+
+.section-hd{max-width:1100px;margin:0 auto .7rem;padding:0 1.5rem;display:flex;align-items:center;gap:.8rem;}
+.section-hd-label{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:.5rem;}
+.section-hd-line{flex:1;height:1px;opacity:.3;}
+.section-hd-count{font-size:.7rem;font-weight:600;padding:.2rem .6rem;border-radius:20px;}
+.fee-hd .section-hd-label{color:var(--fee-color);} .fee-hd .section-hd-line{background:var(--fee-color);} .fee-hd .section-hd-count{background:var(--fee-bg);color:var(--fee-color);border:1px solid #5A9FD430;}
+.var-hd .section-hd-label{color:var(--var-color);} .var-hd .section-hd-line{background:var(--var-color);} .var-hd .section-hd-count{background:var(--var-bg);color:var(--var-color);border:1px solid #A67DC830;}
+
+.grid{max-width:1100px;margin:0 auto;padding:0 1.5rem 1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:transform .2s,box-shadow .2s,border-color .2s;animation:fadeUp .35s ease both;cursor:pointer;position:relative;}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 28px #00000055;}
+.card.fee-card{border-top:3px solid var(--fee-color);}
+.card.var-card{border-top:3px solid var(--var-color);border-color:#A67DC820;opacity:.88;}
+.card.var-card:hover{opacity:1;border-color:var(--var-color);}
+
+.type-ribbon{position:absolute;top:.55rem;right:.6rem;font-size:.58rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:.15rem .45rem;border-radius:3px;}
+.ribbon-fee{background:var(--fee-bg);color:var(--fee-color);border:1px solid #5A9FD430;}
+.ribbon-var{background:var(--var-bg);color:var(--var-color);border:1px solid #A67DC830;}
+
+.card-head{padding:1rem 1.2rem .6rem;display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;padding-right:4.5rem;}
+.card-name{font-family:'Fraunces',serif;font-size:.98rem;font-weight:700;line-height:1.2;}
+.tier-badge{font-size:.58rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:.18rem .5rem;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.t-star .tier-badge{background:#D4AF6A22;color:var(--gold);border:1px solid #D4AF6A44;}
+.t-solid .tier-badge{background:#5A8FA322;color:#7DB5CC;border:1px solid #5A8FA344;}
+.t-pot .tier-badge{background:#A0856A22;color:#C4A98E;border:1px solid #A0856A44;}
+.t-att .tier-badge{background:#ffffff08;color:var(--muted);border:1px solid var(--border);}
+
+/* ESPECIALIDADES no card */
+.card-esp{padding:0 1.2rem .75rem;display:flex;flex-wrap:wrap;gap:.28rem;}
+.esp-tag{font-size:.6rem;font-weight:700;padding:.18rem .55rem;border-radius:20px;letter-spacing:.3px;}
+
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;padding:0 1.2rem .85rem;}
+.metric{background:var(--surface2);border-radius:6px;padding:.6rem .7rem;}
+.m-label{font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-weight:600;margin-bottom:.1rem;}
+.m-val{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:900;line-height:1;}
+.m-brief{color:var(--gold2);} .m-conq{color:var(--s-conquistado);} .m-zero{color:var(--faint);}
+
+.status-section{padding:0 1.2rem .85rem;}
+.status-label{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-weight:600;margin-bottom:.45rem;}
+.status-pills{display:flex;flex-wrap:wrap;gap:.28rem;margin-bottom:.5rem;}
+.sp{font-size:.62rem;font-weight:600;padding:.16rem .5rem;border-radius:20px;display:flex;align-items:center;gap:.25rem;}
+.sp-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.sp-andamento{background:#5A9FD415;color:var(--s-andamento);border:1px solid #5A9FD430;}
+.sp-avaliacao{background:#A67DC815;color:var(--s-avaliacao);border:1px solid #A67DC830;}
+.sp-standby{background:#D4A84B15;color:var(--s-standby);border:1px solid #D4A84B30;}
+.sp-declinado{background:#D4606015;color:var(--s-declinado);border:1px solid #D4606030;}
+.sp-conquistado{background:#5DBD8A15;color:var(--s-conquistado);border:1px solid #5DBD8A30;}
+.stacked-bar{height:5px;background:var(--faint);border-radius:10px;overflow:hidden;display:flex;}
+.sb-seg{height:100%;}
+.clients-row{padding:0 1.2rem .85rem;display:flex;flex-wrap:wrap;gap:.28rem;}
+.client-tag{font-size:.62rem;font-weight:600;padding:.16rem .5rem;background:#5DBD8A15;color:var(--s-conquistado);border:1px solid #5DBD8A30;border-radius:20px;}
+.card-alert{padding:0 1.2rem .85rem;font-size:.62rem;color:#E89A6A;font-weight:700;}
+.inactive-banner{margin:0 1.2rem .85rem;background:#A67DC810;border:1px solid #A67DC825;border-radius:5px;padding:.45rem .7rem;font-size:.68rem;color:var(--var-color);font-weight:600;display:flex;align-items:center;gap:.4rem;}
+
+.chart-view{display:none;max-width:1100px;margin:0 auto;padding:0 1.5rem 4rem;}
+.chart-view.active{display:block;}
+.chart-legend{display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1.3rem;}
+.chart-legend span{font-size:.68rem;color:var(--muted);display:flex;align-items:center;gap:.35rem;}
+.chart-legend span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:2px;}
+.cl-b::before{background:var(--gold);} .cl-c::before{background:var(--s-conquistado);}
+.chart-section-label{font-size:.65rem;letter-spacing:2px;text-transform:uppercase;font-weight:700;margin:1.2rem 0 .6rem;padding:.3rem .6rem;border-radius:4px;display:inline-block;}
+.chart-section-label.fee{background:var(--fee-bg);color:var(--fee-color);}
+.chart-section-label.var{background:var(--var-bg);color:var(--var-color);}
+.crow{display:flex;align-items:center;gap:.8rem;margin-bottom:.8rem;animation:fadeUp .3s ease both;}
+.cname{font-family:'Fraunces',serif;font-size:.8rem;font-weight:700;min-width:130px;text-align:right;flex-shrink:0;}
+.cbars{flex:1;display:flex;flex-direction:column;gap:.2rem;}
+.cbar-row{display:flex;align-items:center;gap:.4rem;}
+.ctrack{height:13px;background:var(--faint);border-radius:3px;flex:1;overflow:hidden;}
+.cfill{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:.35rem;font-size:.58rem;font-weight:700;color:#000;transition:width .9s cubic-bezier(.4,0,.2,1);}
+.cfill-b{background:linear-gradient(to right,var(--gold-dim),var(--gold));}
+.cfill-c{background:linear-gradient(to right,#3a7a50,var(--s-conquistado));}
+.cval{font-size:.7rem;color:var(--muted);min-width:20px;font-family:'Fraunces',serif;font-weight:700;}
+
+/* MODALS */
+.overlay{position:fixed;inset:0;background:#000000cc;z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(5px);}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:100%;max-width:640px;max-height:90vh;display:flex;flex-direction:column;animation:modalIn .22s ease;}
+.modal-hd{padding:1.2rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-hd h2{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:700;color:var(--gold);}
+.modal-close{background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:.2rem .4rem;border-radius:3px;}
+.modal-close:hover{color:var(--text);}
+.modal-body{overflow-y:auto;padding:1rem 1.4rem;flex:1;}
+.modal-ft{padding:.9rem 1.4rem;border-top:1px solid var(--border);display:flex;gap:.5rem;justify-content:flex-end;flex-shrink:0;}
+
+.list-section-label{font-size:.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin:.8rem 0 .4rem;padding:.3rem .6rem;border-radius:4px;display:inline-block;}
+.list-section-label.fee{background:var(--fee-bg);color:var(--fee-color);}
+.list-section-label.var{background:var(--var-bg);color:var(--var-color);}
+.ag-row{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:.75rem 1rem;margin-bottom:.4rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color .15s;}
+.ag-row:hover{border-color:var(--gold-dim);}
+.ag-row.var-row{border-color:#A67DC820;} .ag-row.var-row:hover{border-color:var(--var-color);}
+.ag-row-name{font-family:'Fraunces',serif;font-size:.88rem;font-weight:700;}
+.ag-row-right{display:flex;gap:.5rem;align-items:center;}
+.ag-stat{font-size:.68rem;color:var(--muted);} .ag-stat b{color:var(--text);}
+.ag-esp-tags{display:flex;gap:.25rem;flex-wrap:wrap;margin-top:.25rem;}
+.add-ag-row{display:flex;gap:.5rem;margin-top:.8rem;flex-wrap:wrap;}
+.inp{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:.82rem;padding:.46rem .72rem;border-radius:5px;outline:none;transition:border-color .2s;}
+.inp:focus{border-color:var(--gold);} .inp.full{width:100%;}
+.btn-gold{background:var(--gold);border:none;color:#000;font-family:'Instrument Sans',sans-serif;font-size:.77rem;font-weight:700;padding:.48rem 1rem;border-radius:5px;cursor:pointer;transition:background .15s;white-space:nowrap;}
+.btn-gold:hover{background:var(--gold2);}
+.btn-ghost{background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:'Instrument Sans',sans-serif;font-size:.77rem;font-weight:600;padding:.48rem 1rem;border-radius:5px;cursor:pointer;}
+.btn-ghost:hover{border-color:var(--muted);color:var(--text);}
+.btn-danger{background:#D4606018;border:1px solid #D4606040;color:var(--s-declinado);font-family:'Instrument Sans',sans-serif;font-size:.74rem;font-weight:600;padding:.4rem .8rem;border-radius:5px;cursor:pointer;}
+.btn-danger:hover{background:#D4606030;}
+
+.det-modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:100%;max-width:660px;max-height:92vh;display:flex;flex-direction:column;animation:modalIn .22s ease;}
+.det-hd{padding:1.1rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem;flex-shrink:0;}
+.det-back{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:.2rem .4rem;border-radius:3px;}
+.det-back:hover{color:var(--text);}
+.det-hd h2{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;flex:1;}
+.det-body{overflow-y:auto;padding:1rem 1.4rem;flex:1;}
+.field{margin-bottom:.85rem;}
+.field label{display:block;font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-weight:600;margin-bottom:.28rem;}
+
+.type-toggle{display:flex;gap:.4rem;}
+.type-opt{padding:.4rem .9rem;border-radius:5px;font-size:.72rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.type-opt.fee-opt{background:var(--fee-bg);border-color:#5A9FD430;color:var(--fee-color);}
+.type-opt.var-opt{background:var(--var-bg);border-color:#A67DC830;color:var(--var-color);}
+.type-opt.selected{box-shadow:0 0 0 2px currentColor;} .type-opt:not(.selected){opacity:.45;}
+
+/* ESPECIALIDADES PICKER */
+.esp-picker{display:flex;flex-wrap:wrap;gap:.4rem;}
+.esp-pick-btn{font-size:.68rem;font-weight:700;padding:.28rem .75rem;border-radius:20px;cursor:pointer;border:1px solid;transition:all .15s;font-family:'Instrument Sans',sans-serif;background:transparent;opacity:.4;}
+.esp-pick-btn.sel{opacity:1;}
+.esp-pick-btn:hover{opacity:.85;}
+.esp-limit-msg{font-size:.65rem;color:var(--muted);margin-top:.4rem;font-style:italic;}
+
+.briefings-section{margin-top:1rem;}
+.bsec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem;}
+.bsec-hd h3{font-family:'Fraunces',serif;font-size:.88rem;font-weight:700;color:var(--gold);}
+.briefing-item{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:.65rem .85rem;margin-bottom:.35rem;display:flex;align-items:flex-start;gap:.6rem;}
+.bi-left{flex:1;}
+.status-sel{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:.7rem;padding:.26rem .45rem;border-radius:4px;outline:none;cursor:pointer;flex-shrink:0;}
+.del-b-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.82rem;flex-shrink:0;}
+.del-b-btn:hover{color:var(--s-declinado);}
+.add-briefing{background:var(--faint);border:1px dashed var(--border);border-radius:6px;padding:.65rem;margin-top:.3rem;}
+.add-brief-row{display:grid;grid-template-columns:1fr 1fr auto;gap:.4rem;align-items:end;}
+
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a1a;border:1px solid var(--gold-dim);color:var(--text);font-size:.8rem;font-weight:600;padding:.65rem 1.3rem;border-radius:30px;z-index:300;transition:transform .3s ease;white-space:nowrap;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes modalIn{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:scale(1);}}
+
+@media(max-width:580px){
+  header,.action-bar,.grid,.chart-view,.legend-bar,.type-tabs,.section-hd,.esp-filter{padding-left:1rem;padding-right:1rem;}
+  .insights{margin-left:1rem;margin-right:1rem;}
+  .grid{grid-template-columns:1fr;}
+  .cname{min-width:90px;font-size:.7rem;}
+  .add-brief-row{grid-template-columns:1fr 1fr;}
+  .add-ag-row{flex-direction:column;}
+}
+
+/* FEEDBACK AGÊNCIA */
+.fb-section{padding:.85rem;border-radius:7px;margin-top:.5rem;}
+.fb-section.declinio{background:#D4606008;border:1px solid #D4606030;}
+.fb-section.standby{background:#888FA008;border:1px solid #888FA030;}
+.fb-hd{font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.6rem;}
+.fb-hd.declinio{color:#e07070;}
+.fb-hd.standby{color:var(--s-standby);}
+.motivo-grid{display:flex;flex-wrap:wrap;gap:.32rem;margin-bottom:.6rem;}
+.motivo-btn{font-size:.67rem;font-weight:600;padding:.26rem .65rem;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Instrument Sans',sans-serif;transition:all .15s;}
+.motivo-btn:hover{border-color:var(--gold-dim);color:var(--text);}
+.motivo-btn.sel-d{background:#D4606018;border-color:#D4606050;color:#e07070;}
+.motivo-btn.sel-s{background:#888FA018;border-color:#888FA050;color:var(--s-standby);}
+/* feedback on briefing item */
+.bi-feedback{margin-top:.35rem;padding:.35rem .5rem;border-radius:5px;font-size:.68rem;line-height:1.4;}
+.bi-feedback.declinio{background:#D4606010;border:1px solid #D4606025;color:#e07070;}
+.bi-feedback.standby{background:#888FA010;border:1px solid #888FA025;color:#aab0be;}
+.bi-feedback .fb-motivos{font-weight:700;}
+.bi-feedback .fb-obs{font-style:italic;color:var(--muted);margin-top:.1rem;}
+/* feedback on agency card */
+.card-fb-summary{padding:0 1.2rem .85rem;}
+.fb-sum-label{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-weight:600;margin-bottom:.35rem;}
+.fb-sum-chip{font-size:.63rem;font-weight:600;padding:.2rem .55rem;border-radius:20px;margin:.15rem .15rem 0 0;display:inline-block;}
+.fb-sum-chip.declinio{background:#D4606012;border:1px solid #D4606030;color:#e07070;}
+.fb-sum-chip.standby{background:#888FA012;border:1px solid #888FA030;color:#aab0be;}
+
+/* ADD INLINE */
+.add-inline-row{display:flex;gap:.35rem;margin-top:.45rem;align-items:center;flex-wrap:wrap;}
+.add-inline-inp{background:var(--bg);border:1px dashed var(--border);color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:.78rem;padding:.38rem .65rem;border-radius:5px;outline:none;transition:border-color .2s;flex:1;min-width:120px;}
+.add-inline-inp:focus{border-color:var(--gold);}
+.add-inline-btn{background:var(--faint);border:1px solid var(--border);color:var(--gold);font-family:'Instrument Sans',sans-serif;font-size:.72rem;font-weight:700;padding:.38rem .75rem;border-radius:5px;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.add-inline-btn:hover{background:var(--gold);color:#000;}
+</style>
+</head>
+<body>
+<nav style="background:#0D0F14;border-bottom:1px solid #252830;padding:0 1.5rem;display:flex;align-items:center;gap:.5rem;position:sticky;top:0;z-index:100;height:52px;">
+  <div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:900;color:#D4AF6A;letter-spacing:-1px;margin-right:.8rem">ESSA <span style="color:#EAE6DE">Solução</span></div>
+  <a href="#" style="background:#D4AF6A;color:#000;text-decoration:none;font-size:.75rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:.4rem .9rem;border-radius:5px">🏢 Agências</a>
+  <a href="https://essasolucao.github.io/hub/essa-marcas-final.html" style="color:#666B78;text-decoration:none;font-size:.75rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:.4rem .9rem;border-radius:5px">🏷 Marcas</a>
+  <div style="margin-left:auto;font-size:.65rem" id="api-status-bar">● Carregando...</div>
+</nav>
+
+<header>
+  <div class="header-top">
+    <div>
+      <div class="header-sub">ESSA Solução · Hub de Agências</div>
+      <h1>Painel de <em>Agências</em></h1>
+    </div>
+    <div class="pills">
+      <div class="pill"><b id="tp-b">—</b> briefings</div>
+      <div class="pill"><b id="tp-c">—</b> conquistas</div>
+      <div class="pill fee-pill"><b id="tp-fee">—</b> fee</div>
+      <div class="pill var-pill"><b id="tp-var">—</b> variável</div>
+    </div>
+  </div>
+  <div class="divider"></div>
+</header>
+
+<div class="type-tabs">
+  <div class="type-tab all active" id="tab-all" onclick="setTypeFilter('all',this)">Todas <span class="type-count" id="tc-all">—</span></div>
+  <div class="type-tab fee" id="tab-fee" onclick="setTypeFilter('fee',this)">FEE <span class="type-count" id="tc-fee">—</span></div>
+  <div class="type-tab var" id="tab-var" onclick="setTypeFilter('variavel',this)">VARIÁVEL <span class="type-count" id="tc-var">—</span></div>
+</div>
+
+<!-- ESPECIALIDADE FILTER -->
+<div class="esp-filter">
+  <span class="esp-filter-label">Especialidade:</span>
+  <button class="esp-btn active" id="esp-all" onclick="setEspFilter(null,this)" style="color:var(--muted);border-color:var(--border)">Todas</button>
+  <div id="esp-filter-btns"></div>
+</div>
+
+<div class="legend-bar">
+  <div class="leg"><div class="leg-dot" style="background:var(--s-andamento)"></div>Em Andamento</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--s-avaliacao)"></div>Em Avaliação</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--s-standby)"></div>Standby</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--s-declinado)"></div>Declinado</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--s-conquistado)"></div>Conquistado</div>
+</div>
+
+<div class="insights" style="margin-left:1.5rem;margin-right:1.5rem;">
+  <h3>📊 Leitura Estratégica</h3>
+  <div class="insights-grid" id="insights-content"><div class="ins"><strong>Carregando...</strong></div></div>
+</div>
+
+<div class="action-bar">
+  <button class="btn-tab active" onclick="setView('cards',this)">Cards</button>
+  <button class="btn-tab" onclick="setView('chart',this)">Gráfico</button>
+  <span style="width:1px;background:var(--border);height:18px;display:inline-block;margin:0 .1rem"></span>
+  <button class="btn-tab active" id="sb-b" onclick="setSort('briefings',this)">↓ Briefings</button>
+  <button class="btn-tab" id="sb-c" onclick="setSort('conquistas',this)">↓ Conquistas</button>
+  <button class="btn-tab" id="sb-cv" onclick="setSort('conv',this)">↓ Conversão</button>
+  <button class="btn-tab" id="sb-a" onclick="setSort('alpha',this)">A–Z</button>
+  <button class="btn-edit" onclick="openListModal()">✏️ <span>Editar Dados</span></button>
+</div>
+
+<div id="cards-view"></div>
+<div class="chart-view" id="chart-view">
+  <div class="chart-legend"><span class="cl-b">Briefings</span><span class="cl-c">Conquistas</span></div>
+  <div id="chart-rows"></div>
+</div>
+
+<!-- MODAL LIST -->
+<div class="overlay" id="list-overlay">
+  <div class="modal">
+    <div class="modal-hd"><h2>✏️ Editar Agências</h2><button class="modal-close" onclick="closeListModal()">✕</button></div>
+    <div class="modal-body" id="list-modal-body"></div>
+    <div class="modal-ft"><button class="btn-ghost" onclick="closeListModal()">Fechar</button></div>
+  </div>
+</div>
+
+<!-- MODAL DETAIL -->
+<div class="overlay" id="det-overlay">
+  <div class="det-modal">
+    <div class="det-hd">
+      <button class="det-back" onclick="closeDet()">← Voltar</button>
+      <h2 id="det-title">Agência</h2>
+      <button class="modal-close" onclick="closeDet();closeListModal()">✕</button>
+    </div>
+    <div class="det-body" id="det-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── ESPECIALIDADES ────────────────────────────────────────────────────────────
+const ESPECIALIDADES = ['Assessoria de Imprensa','Eventos','Branding & Design','Full Service'];
+const ESP_STYLE = {
+  'Assessoria de Imprensa': { color:'#5A9FD4', border:'#5A9FD440', bg:'#5A9FD415' },
+  'Eventos':                { color:'#D4A84B', border:'#D4A84B40', bg:'#D4A84B15' },
+  'Branding & Design':      { color:'#e07070', border:'#D4606040', bg:'#D4606015' },
+  'Full Service':           { color:'#5DBD8A', border:'#5DBD8A40', bg:'#5DBD8A15' },
+};
+
+// ── DATA ─────────────────────────────────────────────────────────────────────
+const DEFAULT = [];
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let agencies=[], nextId=11, currentView='cards', currentSort='briefings';
+let typeFilter='all', espFilter=null, currentAgId=null;
+const KEY='essa-hub-v4';
+
+const API_URL = 'https://script.google.com/macros/s/AKfycbwelf8bOwvm1p6ADMQNPKGVCzBBShM-RNf1aa0Idd75JgUXRwh2Ho_5-IlU3ljjaMmYkQ/exec';
+
+async function apiGet(action) {
+  try {
+    const r = await fetch(API_URL + '?action=' + action);
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+async function apiPost(body) {
+  try {
+    const r = await fetch(API_URL, {method:'POST', body:JSON.stringify(body)});
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+function updateApiStatus(connected) {
+  const el = document.getElementById('api-status-bar');
+  if (el) el.innerHTML = connected
+    ? '<span style="color:#5DBD8A;font-size:.65rem">● Conectado ao Google Sheets</span>'
+    : '<span style="color:#D46060;font-size:.65rem">● Offline</span>';
+}
+
+
+async function save(){ /* localStorage disabled - Sheets only */ }
+
+async function load(){
+  // Always clear old cached data
+  try { localStorage.removeItem('essa-hub-v4'); } catch(e) {}
+  // Load exclusively from Google Sheets
+  const data = await apiGet('getAgencias');
+  if (data && Array.isArray(data)) {
+    agencies = data;
+    nextId = data.length ? Math.max(...data.map(a=>a.id)) + 1 : 1;
+    updateApiStatus(true);
+  } else {
+    updateApiStatus(false);
+    agencies = [];
+  }
+}
+
+const STS=['andamento','avaliacao','standby','declinado','conquistado'];
+const STS_LBL={andamento:'Em Andamento',avaliacao:'Em Avaliação',standby:'Standby',declinado:'Declinado',conquistado:'Conquistado'};
+const STS_COL={andamento:'var(--s-andamento)',avaliacao:'var(--s-avaliacao)',standby:'var(--s-standby)',declinado:'var(--s-declinado)',conquistado:'var(--s-conquistado)'};
+
+const cntSt=(ag,s)=>ag.briefings.filter(b=>b.status===s).length;
+const totB=ag=>ag.briefings.length;
+const totC=ag=>cntSt(ag,'conquistado');
+const conv=ag=>totB(ag)?(totC(ag)/totB(ag)*100).toFixed(0):0;
+function getTier(ag){ const c=totC(ag),b=totB(ag); if(c>=2)return'star'; if(c>=1)return'solid'; if(b>=4)return'pot'; return'att'; }
+const TIER_LBL={star:'⭐ Destaque',solid:'✅ Ativa',pot:'🔶 Potencial',att:'🔴 Atenção'};
+
+function filtered(){
+  let list = typeFilter==='all' ? agencies : agencies.filter(a=>a.type===typeFilter);
+  if(espFilter) list = list.filter(a=>(a.especialidades||[]).includes(espFilter));
+  return list;
+}
+function sortedList(arr){ return [...arr].sort((a,b)=>{ if(currentSort==='briefings') return totB(b)-totB(a); if(currentSort==='conquistas') return totC(b)-totC(a)||totB(b)-totB(a); if(currentSort==='conv') return conv(b)-conv(a)||totB(b)-totB(a); if(currentSort==='alpha') return a.name.localeCompare(b.name); return 0; }); }
+function maxB(arr){ return Math.max(...arr.map(totB),1); }
+
+// ── ESP FILTER BUTTONS ────────────────────────────────────────────────────────
+function renderEspFilterBtns(){
+  document.getElementById('esp-filter-btns').innerHTML = ESPECIALIDADES.map(e=>{
+    const s=ESP_STYLE[e];
+    const active = espFilter===e ? 'sel' : '';
+    return `<button class="esp-btn ${active}" onclick="setEspFilter('${e}',this)" style="color:${s.color};border-color:${s.border};background:${active?s.bg:'transparent'}">${e}</button>`;
+  }).join('');
+}
+
+function setEspFilter(e, btn){
+  espFilter=e;
+  document.querySelectorAll('.esp-btn').forEach(b=>{ b.classList.remove('active','sel'); const isAll=b.id==='esp-all'; if(isAll) b.style.background='transparent'; });
+  if(e===null){ document.getElementById('esp-all').classList.add('active'); }
+  else { btn.classList.add('sel'); const s=ESP_STYLE[e]; btn.style.background=s.bg; }
+  render();
+}
+
+// ── INSIGHTS ─────────────────────────────────────────────────────────────────
+function renderInsights(){
+  const fee=agencies.filter(a=>a.type==='fee'), vari=agencies.filter(a=>a.type==='variavel');
+  document.getElementById('tp-b').textContent=agencies.reduce((s,a)=>s+totB(a),0);
+  document.getElementById('tp-c').textContent=agencies.reduce((s,a)=>s+totC(a),0);
+  document.getElementById('tp-fee').textContent=fee.length;
+  document.getElementById('tp-var').textContent=vari.length;
+  document.getElementById('tc-all').textContent=agencies.length;
+  document.getElementById('tc-fee').textContent=fee.length;
+  document.getElementById('tc-var').textContent=vari.length;
+
+  const byConv=[...agencies].filter(a=>totB(a)>0).sort((a,b)=>conv(b)-conv(a));
+  const bestConv=byConv[0];
+  const zeroed=agencies.filter(a=>totB(a)===0);
+  const totalAnd=agencies.reduce((s,a)=>s+cntSt(a,'andamento'),0);
+  const totalAval=agencies.reduce((s,a)=>s+cntSt(a,'avaliacao'),0);
+  const semEsp=agencies.filter(a=>!(a.especialidades||[]).length);
+
+  document.getElementById('insights-content').innerHTML=`
+    ${bestConv?`<div class="ins"><strong>⭐ Melhor conversão: ${bestConv.name}</strong>${conv(bestConv)}% (${totC(bestConv)} conquistas / ${totB(bestConv)} briefings). Priorizar mais ativações!</div>`:''}
+    <div class="ins"><strong>🔵 Pipeline ativo: ${totalAnd} em andamento · ${totalAval} em avaliação</strong>Acompanhar de perto para converter.</div>
+    ${zeroed.length?`<div class="ins"><strong>🔴 Sem briefings: ${zeroed.map(a=>a.name).join(', ')}</strong>Incluir nos próximos envios.</div>`:''}
+    ${semEsp.length?`<div class="ins"><strong>⚙️ Sem especialidade: ${semEsp.map(a=>a.name).join(', ')}</strong>Cadastre a especialidade para filtrar melhor os briefings.</div>`:''}
+  `;
+}
+
+// ── ESP TAG HTML ─────────────────────────────────────────────────────────────
+function espTagHTML(e){ const s=ESP_STYLE[e]||{color:'#999',border:'#99999940',bg:'#99999915'}; return `<span class="esp-tag" style="background:${s.bg};color:${s.color};border:1px solid ${s.border}">${e}</span>`; }
+
+// ── CARDS ────────────────────────────────────────────────────────────────────
+function renderCards(){
+  const container=document.getElementById('cards-view');
+  const data=filtered();
+  if(typeFilter==='all' && !espFilter){
+    const fee=sortedList(data.filter(a=>a.type==='fee'));
+    const vari=sortedList(data.filter(a=>a.type==='variavel'));
+    const mx=maxB(data);
+    container.innerHTML=`${renderSectionHd('fee',fee.length)}<div class="grid">${fee.map((ag,i)=>cardHTML(ag,i,mx)).join('')}</div>${renderSectionHd('var',vari.length)}<div class="grid">${vari.map((ag,i)=>cardHTML(ag,i,mx)).join('')}</div>`;
+  } else {
+    const sorted=sortedList(data), mx=maxB(sorted);
+    container.innerHTML=`<div class="grid">${sorted.map((ag,i)=>cardHTML(ag,i,mx)).join('')}</div>`;
+  }
+}
+
+function renderSectionHd(type,count){ const isFee=type==='fee'; return `<div class="section-hd ${isFee?'fee-hd':'var-hd'}"><div class="section-hd-label">${isFee?'🔵 Agências FEE':'🟣 Agências Variável'}</div><div class="section-hd-count">${count} agência${count!==1?'s':''}</div><div class="section-hd-line"></div></div>`; }
+
+function cardHTML(ag,i,mx){
+  const tier=getTier(ag), b=totB(ag), c=totC(ag), isFee=ag.type==='fee';
+  const esps=(ag.especialidades||[]);
+  const sts=STS.map(s=>({s,n:cntSt(ag,s)})).filter(x=>x.n>0);
+  const clients=ag.briefings.filter(x=>x.status==='conquistado').map(x=>x.brand).filter(x=>x);
+  return `<div class="card t-${tier} ${isFee?'fee-card':'var-card'}" style="animation-delay:${i*.04}s" onclick="openListModal()">
+    <div class="type-ribbon ribbon-${isFee?'fee':'var'}">${isFee?'FEE':'VARIÁVEL'}</div>
+    <div class="card-head"><div class="card-name">${ag.name}</div><div class="tier-badge">${TIER_LBL[tier]}</div></div>
+    ${esps.length?`<div class="card-esp">${esps.map(espTagHTML).join('')}</div>`:''}
+    <div class="metrics">
+      <div class="metric"><div class="m-label">Briefings</div><div class="m-val ${b>0?'m-brief':'m-zero'}">${b}</div></div>
+      <div class="metric"><div class="m-label">Conquistas</div><div class="m-val ${c>0?'m-conq':'m-zero'}">${c}</div></div>
+    </div>
+    ${!isFee?`<div class="inactive-banner">💤 Ativada conforme demanda</div>`:''}
+    ${b>0?`<div class="status-section"><div class="status-label">Status dos briefings</div><div class="status-pills">${sts.map(x=>`<div class="sp sp-${x.s}"><div class="sp-dot" style="background:${STS_COL[x.s]}"></div>${x.n} ${STS_LBL[x.s]}</div>`).join('')}</div><div class="stacked-bar">${STS.map(s=>{ const n=cntSt(ag,s),w=Math.round(n/b*100); return w>0?`<div class="sb-seg" style="width:${w}%;background:${STS_COL[s]}"></div>`:''; }).join('')}</div></div>`:''}
+    ${clients.length?`<div class="clients-row">${clients.map(cl=>`<div class="client-tag">🏷 ${cl}</div>`).join('')}</div>`:''}
+    ${b===0?`<div class="card-alert">⚠ Nenhum briefing enviado ainda</div>`:''}
+    ${cardFeedbackSummaryHTML(ag)}
+  </div>`;
+}
+
+// ── CHART ────────────────────────────────────────────────────────────────────
+function renderChart(){
+  const data=filtered(), mx=Math.max(maxB(data),1);
+  const fee=sortedList(data.filter(a=>a.type==='fee'));
+  const vari=sortedList(data.filter(a=>a.type==='variavel'));
+  const ST_CHART=[
+    {s:'andamento',   col:'#5A9FD4', lbl:'Em Andamento'},
+    {s:'avaliacao',   col:'#D4A84B', lbl:'Em Avaliação'},
+    {s:'conquistado', col:'#5DBD8A', lbl:'Conquistado'},
+    {s:'standby',     col:'#888FA0', lbl:'Standby'},
+    {s:'declinado',   col:'#D46060', lbl:'Declinado'},
+  ];
+  const legend = '<div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1rem">'
+    + ST_CHART.map(x=>`<span style="font-size:.67rem;color:${x.col};display:flex;align-items:center;gap:.3rem"><span style="background:${x.col};width:9px;height:9px;display:inline-block;border-radius:2px"></span>${x.lbl}</span>`).join('')
+    + '</div>';
+  function rows(arr,d0){ return arr.map((ag,i)=>{
+    const bars = ST_CHART.map(({s,col,lbl})=>{
+      const n = (ag.briefings||[]).filter(b=>b.status===s).length;
+      if(!n) return '';
+      const w = Math.round(n/mx*100);
+      return `<div class="cbar-row"><div class="ctrack"><div class="cfill" style="width:${w}%;background:${col};height:100%;border-radius:3px;display:flex;align-items:center;padding-left:.3rem;font-size:.55rem;font-weight:700;color:rgba(0,0,0,.7)">${n>1?n:''}</div></div><div class="cval" style="color:${col}">${n}</div><span style="font-size:.58rem;color:var(--muted);min-width:90px">${lbl}</span></div>`;
+    }).join('');
+    return `<div class="crow" style="animation-delay:${(d0+i)*.04}s"><div class="cname">${ag.name}</div><div class="cbars">${bars||'<span style="font-size:.7rem;color:var(--muted)">Sem briefings</span>'}</div></div>`;
+  }).join(''); }
+  let html=legend;
+  if(typeFilter!=='variavel'&&fee.length) html+=`<div class="chart-section-label fee">🔵 FEE</div>${rows(fee,0)}`;
+  if(typeFilter!=='fee'&&vari.length) html+=`<div class="chart-section-label var">🟣 VARIÁVEL</div>${rows(vari,fee.length)}`;
+  document.getElementById('chart-rows').innerHTML=html;
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function render(){
+  renderInsights();
+  renderEspFilterBtns();
+  if(currentView==='cards'){ document.getElementById('cards-view').style.display='block'; document.getElementById('chart-view').classList.remove('active'); renderCards(); }
+  else{ document.getElementById('cards-view').style.display='none'; document.getElementById('chart-view').classList.add('active'); renderChart(); }
+}
+
+function setView(v,btn){ currentView=v; document.querySelectorAll('.btn-tab').forEach(b=>{ if(b.textContent.toLowerCase().includes('card')||b.textContent.toLowerCase().includes('gráfico')) b.classList.remove('active'); }); btn.classList.add('active'); render(); }
+function setSort(s,btn){ currentSort=s; document.querySelectorAll('#sb-b,#sb-c,#sb-cv,#sb-a').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(); }
+function setTypeFilter(t,btn){ typeFilter=t; document.querySelectorAll('.type-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(); }
+
+// ── LIST MODAL ───────────────────────────────────────────────────────────────
+function openListModal(){ renderListModal(); document.getElementById('list-overlay').classList.add('open'); }
+function closeListModal(){ document.getElementById('list-overlay').classList.remove('open'); render(); }
+
+function renderListModal(){
+  const fee=agencies.filter(a=>a.type==='fee'), vari=agencies.filter(a=>a.type==='variavel');
+  function agRows(arr,cls){ return arr.map(ag=>`
+    <div class="ag-row ${cls}" onclick="openDet(${ag.id})">
+      <div>
+        <div class="ag-row-name">${ag.name}</div>
+        ${(ag.especialidades||[]).length?`<div class="ag-esp-tags">${(ag.especialidades||[]).map(e=>{ const s=ESP_STYLE[e]||{}; return `<span style="font-size:.58rem;font-weight:700;padding:.12rem .45rem;border-radius:20px;background:${s.bg||'#ffffff10'};color:${s.color||'#999'};border:1px solid ${s.border||'#ffffff20'}">${e}</span>`; }).join('')}</div>`:''}
+        <div style="display:flex;gap:.3rem;margin-top:.28rem;flex-wrap:wrap;">
+          ${STS.map(s=>{ const n=cntSt(ag,s); return n?`<div class="sp sp-${s}" style="font-size:.58rem"><div class="sp-dot" style="background:${STS_COL[s]}"></div>${n}</div>`:''; }).join('')}
+          ${totB(ag)===0?`<span style="font-size:.62rem;color:var(--muted)">Sem briefings</span>`:''}
+        </div>
+      </div>
+      <div class="ag-row-right"><div class="ag-stat"><b>${totB(ag)}</b> br.</div><div class="ag-stat"><b style="color:var(--s-conquistado)">${totC(ag)}</b> c.</div><span style="color:var(--gold)">›</span></div>
+    </div>`).join(''); }
+
+  document.getElementById('list-modal-body').innerHTML=`
+    <div class="list-section-label fee">🔵 Agências FEE</div>${agRows(fee,'fee-row')}
+    <div class="list-section-label var" style="margin-top:1rem">🟣 Agências Variável</div>${agRows(vari,'var-row')}
+    <div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:.9rem">
+      <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:.4rem">Adicionar nova agência</div>
+      <div class="add-ag-row">
+        <input class="inp" id="new-ag-name" placeholder="Nome da agência..." style="flex:1" />
+        <select class="inp" id="new-ag-type"><option value="fee">FEE</option><option value="variavel">VARIÁVEL</option></select>
+        <button class="btn-gold" onclick="addAgency()">+ Adicionar</button>
+      </div>
+    </div>`;
+}
+
+async function addAgency(){
+  const name=(document.getElementById('new-ag-name').value.trim()).toUpperCase();
+  const type=document.getElementById('new-ag-type').value;
+  if(!name) return;
+  const newAg = {id:nextId++, name, type, especialidades:[], briefings:[], feeValor:0, feeVencimento:0, dataIngresso:''};
+  agencies.push(newAg);
+  renderListModal();
+  showToast('Salvando...');
+  const r = await apiPost({action:'saveAgencia', data:newAg});
+  if(r && r.ok) showToast(name + ' adicionada e salva ✓');
+  else showToast('Erro ao salvar. Tente novamente.');
+}
+
+// ── DETAIL MODAL ─────────────────────────────────────────────────────────────
+function openDet(id){ currentAgId=id; renderDet(); document.getElementById('det-overlay').classList.add('open'); }
+function closeDet(){ document.getElementById('det-overlay').classList.remove('open'); currentAgId=null; _pendingType=null; }
+
+let _pendingType=null, _pendingEsp=null;
+
+function renderDet(){
+  const ag=agencies.find(a=>a.id===currentAgId); if(!ag) return;
+  _pendingEsp = [...(ag.especialidades||[])];
+  document.getElementById('det-title').textContent=ag.name;
+
+  const espPickerHTML = ESPECIALIDADES.map(e=>{
+    const s=ESP_STYLE[e], isSel=_pendingEsp.includes(e);
+    return `<button class="esp-pick-btn ${isSel?'sel':''}" id="epb-${e.replace(/[^a-z]/gi,'')}" onclick="toggleEsp('${e}',this)" style="color:${s.color};border-color:${s.border};background:${isSel?s.bg:'transparent'}">${e}</button>`;
+  }).join('');
+
+  document.getElementById('det-body').innerHTML=`
+    <div class="field"><label>Nome</label><input class="inp full" id="det-name" value="${ag.name}" /></div>
+    ${ag.type==='fee'?`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:.85rem">
+      <div><label style="display:block;font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-weight:600;margin-bottom:.28rem">💰 Fee Mensal (R$)</label>
+        <input class="inp" id="det-fee" type="number" value="${ag.feeValor||''}" placeholder="Ex: 3500" min="0"/></div>
+      <div><label style="display:block;font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-weight:600;margin-bottom:.28rem">📅 Dia Vencimento</label>
+        <input class="inp" id="det-venc" type="number" value="${ag.feeVencimento||''}" placeholder="Ex: 10" min="1" max="31"/></div>
+      <div><label style="display:block;font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-weight:600;margin-bottom:.28rem">🗓 Data de Contrato</label>
+        <input class="inp" id="det-ingresso" type="date" value="${ag.dataIngresso||''}"/></div>
+    </div>`:`
+    <div style="margin-bottom:.85rem"><label style="display:block;font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-weight:600;margin-bottom:.28rem">🗓 Data de Contrato no Hub</label>
+      <input class="inp full" id="det-ingresso" type="date" value="${ag.dataIngresso||''}"/></div>`}
+    <div class="field">
+      <label>Tipo de Agência</label>
+      <div class="type-toggle">
+        <div class="type-opt fee-opt ${ag.type==='fee'?'selected':''}" onclick="setDetType('fee',this)">🔵 FEE</div>
+        <div class="type-opt var-opt ${ag.type==='variavel'?'selected':''}" onclick="setDetType('variavel',this)">🟣 VARIÁVEL</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Especialidades (máx. 3)</label>
+      <div class="esp-picker" id="esp-picker-det">${espPickerHTML}</div>
+      <div class="esp-limit-msg" id="esp-limit-msg">${_pendingEsp.length}/3 selecionadas</div>
+      <div class="add-inline-row">
+        <input class="add-inline-inp" id="new-esp-hub" placeholder="Nova especialidade..."/>
+        <button class="add-inline-btn" onclick="addNewEspHub()">+ Adicionar</button>
+      </div>
+    </div>
+
+    <div class="briefings-section">
+      <div class="bsec-hd"><h3>Briefings (${ag.briefings.length})</h3></div>
+      <div id="briefing-list">
+        ${ag.briefings.map((b,i)=>`
+          <div class="briefing-item" style="flex-direction:column;align-items:stretch;">
+            <div style="display:flex;align-items:center;gap:.6rem;">
+              <div class="bi-left" style="flex:1"><input class="inp full" value="${b.brand}" onchange="updBField(${i},'brand',this.value)" placeholder="Marca / Cliente" /></div>
+              <select class="status-sel" onchange="updBStatus(${i},this.value);renderDet()">${STS.map(s=>`<option value="${s}" ${b.status===s?'selected':''}>${STS_LBL[s]}</option>`).join('')}</select>
+              <button class="del-b-btn" onclick="delBriefing(${i})">✕</button>
+            </div>
+            ${feedbackBriefingHTML(b,i)}
+            ${briefingFbSummaryHTML(b)}
+          </div>`).join('')}
+      </div>
+      <div class="add-briefing">
+        <div class="add-brief-row">
+          <input class="inp" id="nb-brand" placeholder="Marca / Cliente" />
+          <select class="inp" id="nb-status">${STS.map(s=>`<option value="${s}">${STS_LBL[s]}</option>`).join('')}</select>
+          <button class="btn-gold" onclick="addBriefing()">+ Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:1.2rem;display:flex;justify-content:space-between;align-items:center;padding-bottom:.5rem;">
+      <button class="btn-danger" onclick="delAgency(${ag.id})">🗑 Remover</button>
+      <button class="btn-gold" onclick="saveDet()">💾 Salvar</button>
+    </div>`;
+}
+
+function toggleEsp(e, btn){
+  if(_pendingEsp.includes(e)){ _pendingEsp=_pendingEsp.filter(x=>x!==e); btn.classList.remove('sel'); const s=ESP_STYLE[e]; btn.style.background='transparent'; }
+  else { if(_pendingEsp.length>=3){ showToast('Máximo de 3 especialidades!'); return; } _pendingEsp.push(e); btn.classList.add('sel'); const s=ESP_STYLE[e]; btn.style.background=s.bg; }
+  document.getElementById('esp-limit-msg').textContent=`${_pendingEsp.length}/3 selecionadas`;
+}
+
+function setDetType(t,btn){ _pendingType=t; document.querySelectorAll('.type-opt').forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); }
+function updBField(i,f,v){ const ag=agencies.find(a=>a.id===currentAgId); if(ag) ag.briefings[i][f]=v; }
+function updBStatus(i,v){ const ag=agencies.find(a=>a.id===currentAgId); if(ag){ ag.briefings[i].status=v; save(); } }
+function delBriefing(i){ const ag=agencies.find(a=>a.id===currentAgId); if(ag){ ag.briefings.splice(i,1); save(); renderDet(); } }
+function addBriefing(){ const brand=document.getElementById('nb-brand').value.trim(), status=document.getElementById('nb-status').value; if(!brand) return; const ag=agencies.find(a=>a.id===currentAgId); if(ag){ ag.briefings.push({brand,desc:'',status}); save(); renderDet(); document.getElementById('nb-brand').value=''; showToast('Briefing adicionado!'); } }
+
+function saveDet(){
+  const ag=agencies.find(a=>a.id===currentAgId); if(!ag) return;
+  ag.name=(document.getElementById('det-name').value.trim().toUpperCase())||ag.name;
+  if(_pendingType) ag.type=_pendingType;
+  ag.especialidades=[..._pendingEsp];
+  _pendingType=null;
+  // Save fee, vencimento and dataIngresso
+  const feeEl = document.getElementById('det-fee');
+  const vencEl = document.getElementById('det-venc');
+  const ingressoEl = document.getElementById('det-ingresso');
+  if(feeEl) ag.feeValor = parseFloat(feeEl.value.replace(/[^\d.,]/g,'').replace(',','.')) || 0;
+  if(vencEl) ag.feeVencimento = parseInt(vencEl.value) || 0;
+  if(ingressoEl) ag.dataIngresso = ingressoEl.value || '';
+  // Save all briefing feedback obs
+  ag.briefings.forEach((_,i)=>saveBriefingFeedbackObs(i));
+  // Clear feedback for non-declined/standby briefings
+  ag.briefings.forEach(b=>{ if(!['declinado','standby'].includes(b.status)) b.feedback=null; });
+  const savedAg = agencies.find(a=>a.id===currentAgId);
+  if(savedAg) saveAgenciaToSheets(savedAg);
+  renderListModal();
+}
+async function saveAgenciaToSheets(ag){
+  showToast('Salvando...');
+  try {
+    const r = await apiPost({action:'saveAgencia', data:ag});
+    if(r && r.ok){
+      showToast('Salvo no Google Sheets ✓');
+      setTimeout(async()=>{ await load(); render(); }, 800);
+    } else showToast('Erro ao salvar. Tente novamente.');
+  } catch(e){ showToast('Erro ao salvar.'); }
+}
+async function delAgency(id){
+  if(!confirm('Remover esta agência?')) return;
+  agencies = agencies.filter(a=>a.id!==id);
+  closeDet(); renderListModal(); render();
+  try {
+    const r = await apiPost({action:'deleteAgencia', id});
+    if(r && r.ok) showToast('Agência removida ✓');
+    else showToast('Removida localmente — erro no Sheets.');
+  } catch(e){ showToast('Removida localmente.'); }
+}
+
+
+// ── DYNAMIC SPECIALTY ADD ─────────────────────────────────────────────────────
+function addNewEspHub(){
+  const inp = document.getElementById('new-esp-hub');
+  const val = (inp.value||'').trim();
+  if(!val){ showToast('Digite o nome da especialidade!'); return; }
+  const name = val.charAt(0).toUpperCase() + val.slice(1);
+  if(ESPECIALIDADES.includes(name)){ showToast('Especialidade já existe!'); return; }
+  ESPECIALIDADES.push(name);
+  const palette=['#60A5FA','#F59E0B','#10B981','#EC4899','#8B5CF6','#06B6D4','#F97316','#84CC16'];
+  const col = palette[ESPECIALIDADES.length % palette.length];
+  ESP_STYLE[name] = {color:col, border:col+'40', bg:col+'15'};
+  inp.value = '';
+  // Refresh the esp picker in open modal
+  const el = document.getElementById('esp-picker-det');
+  if(el){
+    el.innerHTML = ESPECIALIDADES.map(e=>{
+      const s=ESP_STYLE[e], isSel=(_pendingEsp||[]).includes(e);
+      return `<button class="esp-pick-btn ${isSel?'sel':''}" onclick="toggleEsp('${e}',this)" style="color:${s.color};border-color:${s.border};background:${isSel?s.bg:'transparent'}">${e}</button>`;
+    }).join('');
+  }
+  showToast(`"${name}" adicionada!`);
+}
+
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+
+
+// ── FEEDBACK ─────────────────────────────────────────────────────────────────
+const MOTIVOS = ['Preço acima do esperado','Perfil não aderente','Cliente escolheu outra agência','Sem retorno do cliente','Falta de especialidade','Outro'];
+
+function feedbackBriefingHTML(b, idx){
+  if(!['declinado','standby'].includes(b.status)) return '';
+  const cls = b.status==='declinado'?'d':'s';
+  const stCls = b.status==='declinado'?'declinio':'standby';
+  const motivos = b.feedback?.motivos||[];
+  const obs = b.feedback?.obs||'';
+  const icon = b.status==='declinado'?'❌':'⏸';
+  const lbl  = b.status==='declinado'?'Motivo do Declínio':'Motivo do Standby';
+  return `<div class="fb-section ${stCls}" style="margin-top:.4rem">
+    <div class="fb-hd ${stCls}">${icon} ${lbl}</div>
+    <div class="motivo-grid">${MOTIVOS.map(m=>{
+      const sel=motivos.includes(m);
+      return '<button class="motivo-btn '+(sel?'sel-'+cls:'')+'" onclick="toggleBriefingMotivo('+idx+',\''+m+'\',this,\''+cls+'\')">'+m+'</button>';
+    }).join('')}</div>
+    <textarea class="inp" id="fb-obs-${idx}" placeholder="Observações (opcional)..." style="min-height:46px;font-size:.76rem">${obs}</textarea>
+  </div>`;
+}
+
+function toggleBriefingMotivo(idx, m, btn, cls){
+  const ag=agencies.find(a=>a.id===currentAgId); if(!ag) return;
+  const b=ag.briefings[idx];
+  if(!b.feedback) b.feedback={motivos:[],obs:''};
+  const i=b.feedback.motivos.indexOf(m);
+  if(i>=0){ b.feedback.motivos.splice(i,1); btn.classList.remove('sel-d','sel-s'); }
+  else { b.feedback.motivos.push(m); btn.classList.add('sel-'+cls); }
+}
+
+function saveBriefingFeedbackObs(idx){
+  const ag=agencies.find(a=>a.id===currentAgId); if(!ag) return;
+  const el=document.getElementById('fb-obs-'+idx);
+  if(el){ if(!ag.briefings[idx].feedback) ag.briefings[idx].feedback={motivos:[],obs:''}; ag.briefings[idx].feedback.obs=el.value.trim(); }
+}
+
+function briefingFbSummaryHTML(b){
+  if(!['declinado','standby'].includes(b.status)||!b.feedback) return '';
+  const fb=b.feedback;
+  if(!fb.motivos?.length && !fb.obs) return '';
+  const cls=b.status==='declinado'?'declinio':'standby';
+  const icon=b.status==='declinado'?'❌':'⏸';
+  return '<div class="bi-feedback '+cls+'">'
+    +(fb.motivos?.length?'<div class="fb-motivos">'+icon+' '+fb.motivos.join(' · ')+'</div>':'')
+    +(fb.obs?'<div class="fb-obs">"'+fb.obs+'"</div>':'')
+    +'</div>';
+}
+
+function cardFeedbackSummaryHTML(ag){
+  const items = ag.briefings.filter(b=>['declinado','standby'].includes(b.status)&&b.feedback?.motivos?.length);
+  if(!items.length) return '';
+  const freq={};
+  items.forEach(b=>b.feedback.motivos.forEach(m=>{ freq[m]=(freq[m]||0)+1; }));
+  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const hasDec=items.some(b=>b.status==='declinado');
+  const cls=hasDec?'declinio':'standby';
+  return '<div class="card-fb-summary"><div class="fb-sum-label">Principais motivos de não-conversão</div>'
+    +sorted.map(([m,n])=>'<span class="fb-sum-chip '+cls+'">'+m+' ('+n+')</span>').join('')
+    +'</div>';
+}
+
+
+(async()=>{ await load(); render(); })();
+</script>
+</body>
+</html>
