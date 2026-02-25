@@ -492,13 +492,7 @@ async function loadAll(){
   // Load agencies
   const agData = await apiGet('getAgencias');
   if (agData && agData.length) agencies = agData;
-  else {
-    try{
-      const raw=localStorage.getItem(AG_KEY);
-      if(raw){ const d=JSON.parse(raw); agencies=d.agencies||[]; }
-    }catch(e){}
-  }
-  if(!agencies.length) agencies=defaultAgencies();
+  // agencies stay empty if Sheets returns nothing
 
   // Load brands
   const mrcData = await apiGet('getMarcas');
@@ -509,7 +503,7 @@ async function loadAll(){
   }catch(e){}
   brands=[];
 }
-function defaultAgencies(){ return [{id:1,name:'GISELE GOMES COMUNICA',type:'fee',especialidades:['Assessoria de Imprensa']},{id:2,name:'DRIVEN',type:'fee',especialidades:['Full Service']},{id:3,name:'ENERGIA',type:'fee',especialidades:['Full Service']},{id:4,name:'ADAM',type:'fee',especialidades:[]},{id:5,name:'UNOBVIOUS',type:'fee',especialidades:[]},{id:6,name:'ÁLAMO',type:'fee',especialidades:[]},{id:7,name:'HOW HUB',type:'fee',especialidades:[]},{id:8,name:'YALL',type:'fee',especialidades:[]},{id:9,name:'MANTRA',type:'variavel',especialidades:['Branding & Design']},{id:10,name:'AERIAL',type:'variavel',especialidades:['Eventos']}]; }
+function defaultAgencies(){ return []; },{id:2,name:'DRIVEN',type:'fee',especialidades:['Full Service']},{id:3,name:'ENERGIA',type:'fee',especialidades:['Full Service']},{id:4,name:'ADAM',type:'fee',especialidades:[]},{id:5,name:'UNOBVIOUS',type:'fee',especialidades:[]},{id:6,name:'ÁLAMO',type:'fee',especialidades:[]},{id:7,name:'HOW HUB',type:'fee',especialidades:[]},{id:8,name:'YALL',type:'fee',especialidades:[]},{id:9,name:'MANTRA',type:'variavel',especialidades:['Branding & Design']},{id:10,name:'AERIAL',type:'variavel',especialidades:['Eventos']}]; }
 
 // ── FILTERING ────────────────────────────────────────────────────────────────
 function filtered(){
