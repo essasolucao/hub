@@ -1041,7 +1041,6 @@ function setDraftStatus(s,btn){
 function toggleDraftEsp(e,btn){ if(!_draft.especialidades)_draft.especialidades=[]; if(_draft.especialidades.includes(e)){_draft.especialidades=_draft.especialidades.filter(x=>x!==e);btn.classList.remove('sel');btn.style.background='transparent';}else{if(_draft.especialidades.length>=2){showToast('Máx. 2 especialidades por briefing!');return;}_draft.especialidades.push(e);btn.classList.add('sel');btn.style.background=ESP_STYLE[e].bg;} }
 function toggleDraftAg(id,row){ if(!_draft.agencias)_draft.agencias=[]; if(_draft.agencias.includes(id)){_draft.agencias=_draft.agencias.filter(x=>x!==id);row.classList.remove('sel');row.querySelector('.ag-pick-check').textContent='';}else{_draft.agencias.push(id);row.classList.add('sel');row.querySelector('.ag-pick-check').textContent='✓';} }
 
-async 
 function maskDate(inp){
   let v = inp.value.replace(/[^0-9]/g,'');
   if(v.length>2) v = v.slice(0,2)+'/'+v.slice(2);
