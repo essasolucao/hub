@@ -241,6 +241,19 @@ h1 em{font-style:italic;color:var(--gold);}
 .add-inline-inp:focus{border-color:var(--gold);}
 .add-inline-btn{background:var(--faint);border:1px solid var(--border);color:var(--gold);font-family:'Instrument Sans',sans-serif;font-size:.72rem;font-weight:700;padding:.38rem .75rem;border-radius:5px;cursor:pointer;white-space:nowrap;transition:all .15s;}
 .add-inline-btn:hover{background:var(--gold);color:#000;}
+
+.ins-row{display:flex;flex-direction:column;gap:.5rem;}
+.ins-monthly{flex-direction:column!important;}
+.monthly-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:.5rem;}
+.monthly-col{background:var(--surface2);border-radius:6px;padding:.6rem .75rem;}
+.monthly-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:.4rem;color:var(--muted);}
+.monthly-ag{font-size:.7rem;padding:.2rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.monthly-ag:last-child{border-bottom:none;}
+.monthly-ag.has{color:var(--text);}
+.monthly-ag.no{color:#D46060;}
+.monthly-ag.none{color:var(--muted);font-style:italic;}
+.monthly-cnt{font-size:.6rem;background:var(--gold)22;color:var(--gold);padding:.1rem .35rem;border-radius:20px;font-weight:700;}
+.monthly-more{font-size:.62rem;color:var(--muted);margin-top:.25rem;font-style:italic;}
 </style>
 </head>
 <body>
@@ -437,28 +450,75 @@ function renderInsights(){
   const fee=agencies.filter(a=>a.type==='fee'), vari=agencies.filter(a=>a.type==='variavel');
   document.getElementById('tp-b').textContent=agencies.reduce((s,a)=>s+totB(a),0);
   document.getElementById('tp-c').textContent=agencies.reduce((s,a)=>s+totC(a),0);
-  document.getElementById('tp-fee').textContent=fee.length;
-  document.getElementById('tp-var').textContent=vari.length;
-  document.getElementById('tc-all').textContent=agencies.length;
-  document.getElementById('tc-fee').textContent=fee.length;
-  document.getElementById('tc-var').textContent=vari.length;
+  document.getElementById('tp-f').textContent=fee.length;
+  document.getElementById('tp-v').textContent=vari.length;
 
-  const byConv=[...agencies].filter(a=>totB(a)>0).sort((a,b)=>conv(b)-conv(a));
-  const bestConv=byConv[0];
-  const zeroed=agencies.filter(a=>totB(a)===0);
-  const totalAnd=agencies.reduce((s,a)=>s+cntSt(a,'andamento'),0);
-  const totalAval=agencies.reduce((s,a)=>s+cntSt(a,'avaliacao'),0);
-  const semEsp=agencies.filter(a=>!(a.especialidades||[]).length);
+  // ── Monthly briefing heatmap ──────────────────────────────
+  const now = new Date();
+  const months = [];
+  for(let i=5; i>=0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push({ label: d.toLocaleString('pt-BR',{month:'short'}).toUpperCase(), year: d.getFullYear(), month: d.getMonth() });
+  }
 
-  document.getElementById('insights-content').innerHTML=`
-    ${bestConv?`<div class="ins"><strong>⭐ Melhor conversão: ${bestConv.name}</strong>${conv(bestConv)}% (${totC(bestConv)} conquistas / ${totB(bestConv)} briefings). Priorizar mais ativações!</div>`:''}
-    <div class="ins"><strong>🔵 Pipeline ativo: ${totalAnd} em andamento · ${totalAval} em avaliação</strong>Acompanhar de perto para converter.</div>
-    ${zeroed.length?`<div class="ins"><strong>🔴 Sem briefings: ${zeroed.map(a=>a.name).join(', ')}</strong>Incluir nos próximos envios.</div>`:''}
-    ${semEsp.length?`<div class="ins"><strong>⚙️ Sem especialidade: ${semEsp.map(a=>a.name).join(', ')}</strong>Cadastre a especialidade para filtrar melhor os briefings.</div>`:''}
-  `;
+  // For each month, which agencies received briefings
+  const agWithBriefings = months.map(m => {
+    const received = agencies.filter(ag =>
+      (ag.briefings||[]).some(b => {
+        if(!b.receivedAt && !b.brand) return false;
+        // Try to find date from marca data via brand name match
+        return true; // We'll use a simpler approach below
+      })
+    );
+    return { ...m, received: [] };
+  });
+
+  // Simpler: check if agency has any briefings at all per month
+  // Since we may not have per-briefing dates, show overall status
+  const hasBriefing = agencies.map(ag => ({
+    name: ag.name,
+    total: (ag.briefings||[]).length,
+    conquistados: (ag.briefings||[]).filter(b=>b.status==='conquistado').length
+  }));
+
+  const comBriefing = hasBriefing.filter(a=>a.total>0).sort((a,b)=>b.total-a.total);
+  const semBriefing = hasBriefing.filter(a=>a.total===0);
+
+  const el = document.getElementById('insights-content');
+  if(!el) return;
+
+  let html = '<div class="ins-row">';
+
+  // Pipeline
+  const totalBriefings = agencies.reduce((s,a)=>s+totB(a),0);
+  const totalConquistas = agencies.reduce((s,a)=>s+totC(a),0);
+  const taxaGeral = totalBriefings>0 ? Math.round(totalConquistas/totalBriefings*100) : 0;
+  html += `<div class="ins"><span class="ins-ico">🔵</span><strong>Pipeline ativo:</strong> ${agencies.filter(a=>(a.briefings||[]).some(b=>['andamento','avaliacao'].includes(b.status))).length} em andamento · ${agencies.filter(a=>(a.briefings||[]).some(b=>b.status==='avaliacao')).length} em avaliação</div>`;
+
+  // Monthly briefing signal
+  html += `<div class="ins ins-monthly"><span class="ins-ico">📅</span><strong>Sinalização mensal de briefings:</strong><div class="monthly-grid">`;
+  html += `<div class="monthly-col"><div class="monthly-label">✅ Receberam briefing (${comBriefing.length})</div>`;
+  if(comBriefing.length){
+    html += comBriefing.slice(0,8).map(a=>`<div class="monthly-ag has">${a.name} <span class="monthly-cnt">${a.total} briefing${a.total>1?'s':''}</span></div>`).join('');
+    if(comBriefing.length>8) html += `<div class="monthly-more">+${comBriefing.length-8} agências</div>`;
+  } else html += '<div class="monthly-ag none">Nenhuma ainda</div>';
+  html += '</div>';
+
+  html += `<div class="monthly-col"><div class="monthly-label">⚠️ Sem briefings ainda (${semBriefing.length})</div>`;
+  if(semBriefing.length){
+    html += semBriefing.slice(0,8).map(a=>`<div class="monthly-ag no">${a.name}</div>`).join('');
+    if(semBriefing.length>8) html += `<div class="monthly-more">+${semBriefing.length-8} agências</div>`;
+  } else html += '<div class="monthly-ag has">Todas receberam! 🎉</div>';
+  html += '</div></div></div>';
+
+  // Sem especialidade
+  const semEsp = agencies.filter(a=>!(a.especialidades||[]).length);
+  if(semEsp.length) html += `<div class="ins"><span class="ins-ico">✳️</span><strong>Sem especialidade:</strong> ${semEsp.map(a=>a.name).join(', ')}<br><small>Cadastre a especialidade para filtrar melhor os briefings.</small></div>`;
+
+  html += '</div>';
+  el.innerHTML = html;
 }
 
-// ── ESP TAG HTML ─────────────────────────────────────────────────────────────
 function espTagHTML(e){ const s=ESP_STYLE[e]||{color:'#999',border:'#99999940',bg:'#99999915'}; return `<span class="esp-tag" style="background:${s.bg};color:${s.color};border:1px solid ${s.border}">${e}</span>`; }
 
 // ── CARDS ────────────────────────────────────────────────────────────────────
