@@ -1005,10 +1005,12 @@ function aceiteChipsHTML(b){
 function winnerCardHTML(b){
   if(b.status !== 'conquista') return '';
   const winId = b.agenciaVencedora;
-  if(!winId) return '';
-  const ag = agencies.find(a=>a.id===winId);
-  if(!ag) return '';
-  return `<div class="bcard-winner"><span class="winner-pill">🏆 Conquistado por: ${ag.name}</span></div>`;
+  const ag = winId ? agencies.find(a=>a.id===winId) : null;
+  if(ag){
+    return `<div class="bcard-winner"><span class="winner-pill">🏆 Conquistado por: <strong>${ag.name}</strong></span></div>`;
+  }
+  // Conquista but no winner selected yet - prompt to select
+  return `<div class="bcard-winner"><span class="winner-pill" style="opacity:.6;border-style:dashed">🏆 Conquista — clique para definir vencedora</span></div>`;
 }
 
 function winnerSectionHTML(b){
